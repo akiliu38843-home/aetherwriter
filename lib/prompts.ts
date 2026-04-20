@@ -29,6 +29,90 @@ export const DEFAULT_DIMENSIONS: NarrativeDimensions = {
   duration: 'scene',
 }
 
+export interface WritingMode {
+  id: string
+  name: string
+  description: string
+  icon: string
+  dimensions: NarrativeDimensions
+  example?: string
+}
+
+export const WRITING_MODES: WritingMode[] = [
+  {
+    id: 'light-novel',
+    name: '轻小说',
+    description: '清新自然、贴近内心',
+    icon: '🌸',
+    dimensions: {
+      distance: 'near',
+      focalization: 'internal',
+      duration: 'scene',
+    },
+    example: '采用自由间接引语，将角色的内心独白与叙述者声音融合，营造贴近读者心灵的共鸣感。',
+  },
+  {
+    id: 'mystery',
+    name: '推理小说',
+    description: '冷峻客观、逻辑严密',
+    icon: '🔍',
+    dimensions: {
+      distance: 'far',
+      focalization: 'external',
+      duration: 'ellipsis',
+    },
+    example: '模拟客观的电影镜头，仅记录物理动作和环境细节，让读者自己推理真相。',
+  },
+  {
+    id: 'literary',
+    name: '纯文学',
+    description: '诗意深邃、意象丰富',
+    icon: '📚',
+    dimensions: {
+      distance: 'extreme-near',
+      focalization: 'zero',
+      duration: 'pause',
+    },
+    example: '在关键场景强制让时间停滞，插入大量静态感官细节，营造诗意和意象的深度。',
+  },
+  {
+    id: 'web-novel',
+    name: '网文爽文',
+    description: '节奏明快、高潮迭起',
+    icon: '⚡',
+    dimensions: {
+      distance: 'extreme-near',
+      focalization: 'internal',
+      duration: 'ellipsis',
+    },
+    example: '直接使用引号包裹对话，大刀阔斧剔除过渡，直接切入核心动作和结果。',
+  },
+  {
+    id: 'horror',
+    name: '悬疑惊悚',
+    description: '神秘紧张、氛围营造',
+    icon: '🌙',
+    dimensions: {
+      distance: 'extreme-far',
+      focalization: 'external',
+      duration: 'pause',
+    },
+    example: '用概述性语言营造疏离感，聚焦于环境细节和角色外在反应，暗示危险。',
+  },
+  {
+    id: 'romance',
+    name: '言情小说',
+    description: '细腻情感、浪漫温馨',
+    icon: '💕',
+    dimensions: {
+      distance: 'near',
+      focalization: 'zero',
+      duration: 'scene',
+    },
+    example: '全知视角揭示多角色内心，同时保持细腻的情感描写，让读者感受角色心动。',
+  },
+]
+
 export const DISTANCE_PROMPTS: Record<NarrativeDimensions['distance'], string> = {
   'extreme-far': '采用叙述化言语。使用概述性动词（如：他坦白了、她拒绝了），拉开叙事距离，营造疏离、冷峻的文本氛围。',
   'far': '采用间接引语。使用引导从句（如：他说他会去），保持中立、客观的陈述视角。',
