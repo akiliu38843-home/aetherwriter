@@ -167,7 +167,6 @@ export function TiptapEditor() {
 
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
-      let buffer = ''
       let fullText = ''
 
       if (reader) {
@@ -175,49 +174,33 @@ export function TiptapEditor() {
           const { done, value } = await reader.read()
           if (done) break
 
-          buffer += decoder.decode(value, { stream: true })
-
-          while (buffer.includes('\n')) {
-            const newlineIndex = buffer.indexOf('\n')
-            const line = buffer.slice(0, newlineIndex)
-            buffer = buffer.slice(newlineIndex + 1)
-
-            const trimmedLine = line.trim()
-            if (!trimmedLine || trimmedLine.length === 0) {
-              continue
+          const chunk = decoder.decode(value, { stream: true })
+          
+          // 检查是否会超过最大长度限制
+          if (fullText.length + chunk.length <= maxLength) {
+            fullText += chunk
+          } else {
+            // 截断到最大长度
+            const remainingLength = maxLength - fullText.length
+            if (remainingLength > 0) {
+              fullText += chunk.slice(0, remainingLength)
             }
-
-            try {
-              const data = JSON.parse(trimmedLine)
-
-              if (typeof data === 'string' && data.length > 0) {
-                if (fullText.length + data.length <= maxLength) {
-                  fullText += data
-                } else {
-                  const remainingLength = maxLength - fullText.length
-                  if (remainingLength > 0) {
-                    fullText += data.slice(0, remainingLength)
-                  }
-                  abortControllerRef.current?.abort()
-                  break
-                }
-
-                setAIDrafts((prev) => {
-                  const newDrafts = new Map(prev)
-                  newDrafts.set(draftMarkerId, {
-                    id: draftMarkerId,
-                    content: fullText,
-                    from: to,
-                    to: to + fullText.length,
-                    isGenerating: true,
-                  })
-                  return newDrafts
-                })
-              }
-            } catch (e) {
-              continue
-            }
+            // 达到字数限制，停止生成
+            abortControllerRef.current?.abort()
+            break
           }
+
+          setAIDrafts((prev) => {
+            const newDrafts = new Map(prev)
+            newDrafts.set(draftMarkerId, {
+              id: draftMarkerId,
+              content: fullText,
+              from: to,
+              to: to + fullText.length,
+              isGenerating: true,
+            })
+            return newDrafts
+          })
         }
       }
 
