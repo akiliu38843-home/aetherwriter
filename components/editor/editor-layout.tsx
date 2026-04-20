@@ -6,6 +6,7 @@ import { ChatInterface } from "@/components/chat/chat-interface"
 import { MessageCircle, PanelBottom, ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 export function EditorLayout() {
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -14,7 +15,9 @@ export function EditorLayout() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 min-h-0 overflow-hidden">
-        <TiptapEditor />
+        <ErrorBoundary>
+          <TiptapEditor />
+        </ErrorBoundary>
       </div>
       
       {isChatOpen && (
@@ -24,7 +27,9 @@ export function EditorLayout() {
             className="flex-shrink-0 bg-background"
             style={{ height: `${chatHeight}px` }}
           >
-            <ChatInterface />
+            <ErrorBoundary>
+              <ChatInterface />
+            </ErrorBoundary>
           </div>
         </>
       )}

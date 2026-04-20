@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Sparkles, AlertTriangle, Loader2, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { StoryBeatNode as StoryBeatNodeType, CanvasEdge } from "@/lib/types"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 const nodeTypes = {
   storyBeat: StoryBeatNode,
@@ -324,42 +325,44 @@ export function PlotCanvas() {
         </ul>
       </div>
 
-      <ReactFlow
-        nodes={nodes.map((node) => ({
-          ...node,
-          data: {
-            ...node.data,
-            onAddChild: handleAddChild,
-            onDelete: handleDelete,
-            onTitleChange: handleTitleChange,
-            onContentChange: handleContentChange,
-            onAIBranch: handleAIBranch,
-            isGenerating,
-          },
-        }))}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={handleConnect}
-        nodeTypes={nodeTypes}
-        defaultEdgeOptions={{
-          type: "smoothstep",
-          animated: true,
-          style: { stroke: "#8b5cf6", strokeWidth: 2 },
-          markerEnd: { type: "arrowclosed" as any, color: "#8b5cf6" },
-        }}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        attributionPosition="bottom-left"
-      >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-        <Controls className="bg-background border rounded-lg shadow-lg" />
-        <MiniMap
-          className="bg-background border rounded-lg shadow-lg"
-          nodeStrokeColor={() => "hsl(var(--foreground))"}
-          maskColor="rgb(0, 0, 0, 0.1)"
-        />
-      </ReactFlow>
+      <ErrorBoundary>
+        <ReactFlow
+          nodes={nodes.map((node) => ({
+            ...node,
+            data: {
+              ...node.data,
+              onAddChild: handleAddChild,
+              onDelete: handleDelete,
+              onTitleChange: handleTitleChange,
+              onContentChange: handleContentChange,
+              onAIBranch: handleAIBranch,
+              isGenerating,
+            },
+          }))}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={handleConnect}
+          nodeTypes={nodeTypes}
+          defaultEdgeOptions={{
+            type: "smoothstep",
+            animated: true,
+            style: { stroke: "#8b5cf6", strokeWidth: 2 },
+            markerEnd: { type: "arrowclosed" as any, color: "#8b5cf6" },
+          }}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          attributionPosition="bottom-left"
+        >
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+          <Controls className="bg-background border rounded-lg shadow-lg" />
+          <MiniMap
+            className="bg-background border rounded-lg shadow-lg"
+            nodeStrokeColor={() => "hsl(var(--foreground))"}
+            maskColor="rgb(0, 0, 0, 0.1)"
+          />
+        </ReactFlow>
+      </ErrorBoundary>
     </div>
   )
 }

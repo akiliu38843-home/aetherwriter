@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { MainContent } from "@/components/layout/main-content"
 import { ViewProvider } from "@/components/layout/view-context"
 import { NarrativeProvider } from "@/components/layout/narrative-context"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 export const metadata: Metadata = {
   title: "AetherWriter",
@@ -22,27 +23,31 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
-        <ViewProvider>
-          <NarrativeProvider>
-            <SidebarProvider defaultOpen={true}>
-              <AppSidebarLeft />
-              <SidebarInset>
-                <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
-                  <SidebarTrigger className="-ml-1" />
-                  <Separator orientation="vertical" className="mr-2 h-4" />
-                  <div className="flex flex-1 items-center justify-between">
-                    <h1 className="text-lg font-semibold">AetherWriter</h1>
-                    <HeaderControls />
-                  </div>
-                </header>
-                <main className="flex-1 bg-background">
-                  <MainContent />
-                </main>
-              </SidebarInset>
-              <AppSidebarRight />
-            </SidebarProvider>
-          </NarrativeProvider>
-        </ViewProvider>
+        <ErrorBoundary>
+          <ViewProvider>
+            <NarrativeProvider>
+              <SidebarProvider defaultOpen={true}>
+                <AppSidebarLeft />
+                <SidebarInset>
+                  <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
+                    <SidebarTrigger className="-ml-1" />
+                    <Separator orientation="vertical" className="mr-2 h-4" />
+                    <div className="flex flex-1 items-center justify-between">
+                      <h1 className="text-lg font-semibold">AetherWriter</h1>
+                      <HeaderControls />
+                    </div>
+                  </header>
+                  <ErrorBoundary>
+                    <main className="flex-1 bg-background">
+                      <MainContent />
+                    </main>
+                  </ErrorBoundary>
+                </SidebarInset>
+                <AppSidebarRight />
+              </SidebarProvider>
+            </NarrativeProvider>
+          </ViewProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )
