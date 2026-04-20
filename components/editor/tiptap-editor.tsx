@@ -167,71 +167,55 @@ export function TiptapEditor() {
 
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
-      let fullText = ""
+      let buffer = ''
+      let fullText = ''
 
       if (reader) {
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
 
-          const chunk = decoder.decode(value, { stream: true })
-          const lines = chunk.split('\n')
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const jsonStr = line.slice(6)
-                if (jsonStr.trim() === '[DONE]') continue
-                
-                const data = JSON.parse(jsonStr)
-                if (data.choices && data.choices[0]?.delta?.content) {
-                  const deltaContent = data.choices[0].delta.content
-                  
-                  // 检查是否会超过最大长度限制
-                  if (fullText.length + deltaContent.length <= maxLength) {
-                    fullText += deltaContent
-                  } else {
-                    // 截断到最大长度
-                    const remainingLength = maxLength - fullText.length
-                    if (remainingLength > 0) {
-                      fullText += deltaContent.slice(0, remainingLength)
-                    }
-                    // 达到字数限制，停止生成
-                    abortControllerRef.current?.abort()
-                    break
+          buffer += decoder.decode(value, { stream: true })
+
+          while (buffer.includes('\n')) {
+            const newlineIndex = buffer.indexOf('\n')
+            const line = buffer.slice(0, newlineIndex)
+            buffer = buffer.slice(newlineIndex + 1)
+
+            const trimmedLine = line.trim()
+            if (!trimmedLine || trimmedLine.length === 0) {
+              continue
+            }
+
+            try {
+              const data = JSON.parse(trimmedLine)
+
+              if (typeof data === 'string' && data.length > 0) {
+                if (fullText.length + data.length <= maxLength) {
+                  fullText += data
+                } else {
+                  const remainingLength = maxLength - fullText.length
+                  if (remainingLength > 0) {
+                    fullText += data.slice(0, remainingLength)
                   }
-                  
-                  setAIDrafts((prev) => {
-                    const newDrafts = new Map(prev)
-                    newDrafts.set(draftMarkerId, {
-                      id: draftMarkerId,
-                      content: fullText,
-                      from: to,
-                      to: to + fullText.length,
-                      isGenerating: true,
-                    })
-                    return newDrafts
-                  })
+                  abortControllerRef.current?.abort()
+                  break
                 }
-              } catch (e) {
-                // 忽略解析错误，继续处理下一行
-              }
-            } else if (chunk.trim() && fullText.length < maxLength) {
-              const remainingLength = maxLength - fullText.length
-              const truncatedChunk = chunk.slice(0, remainingLength)
-              fullText += truncatedChunk
-              
-              setAIDrafts((prev) => {
-                const newDrafts = new Map(prev)
-                newDrafts.set(draftMarkerId, {
-                  id: draftMarkerId,
-                  content: fullText,
-                  from: to,
-                  to: to + fullText.length,
-                  isGenerating: true,
+
+                setAIDrafts((prev) => {
+                  const newDrafts = new Map(prev)
+                  newDrafts.set(draftMarkerId, {
+                    id: draftMarkerId,
+                    content: fullText,
+                    from: to,
+                    to: to + fullText.length,
+                    isGenerating: true,
+                  })
+                  return newDrafts
                 })
-                return newDrafts
-              })
+              }
+            } catch (e) {
+              continue
             }
           }
         }

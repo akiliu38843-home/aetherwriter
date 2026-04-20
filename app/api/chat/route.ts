@@ -15,41 +15,43 @@ function createTextStream(response: Response): ReadableStream {
       try {
         while (true) {
           const { done, value } = await reader.read()
-          
+
           if (done) {
-            if (buffer.trim()) {
-              controller.enqueue(new TextEncoder().encode(buffer))
-            }
-            controller.close()
             break
           }
 
           buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
 
-          for (const line of lines) {
+          while (buffer.includes('\n')) {
+            const newlineIndex = buffer.indexOf('\n')
+            const line = buffer.slice(0, newlineIndex)
+            buffer = buffer.slice(newlineIndex + 1)
+
             const trimmedLine = line.trim()
-            if (trimmedLine.startsWith('data: ')) {
-              const dataStr = trimmedLine.slice(6)
-              
-              if (dataStr === '[DONE]') {
-                continue
-              }
+            if (!trimmedLine || !trimmedLine.startsWith('data: ')) {
+              continue
+            }
 
-              try {
-                const data = JSON.parse(dataStr)
-                const content = data.choices?.[0]?.delta?.content
-                
-                if (content) {
-                  controller.enqueue(new TextEncoder().encode(content))
-                }
-              } catch (e) {
-                // Skip invalid JSON
+            const dataStr = trimmedLine.slice(6)
+
+            if (dataStr === '[DONE]') {
+              continue
+            }
+
+            try {
+              const data = JSON.parse(dataStr)
+              const content = data.choices?.[0]?.delta?.content
+
+              if (typeof content === 'string' && content.length > 0) {
+                controller.enqueue(new TextEncoder().encode(content))
               }
+            } catch (e) {
+              continue
             }
           }
         }
+
+        controller.close()
       } catch (error) {
         controller.error(error)
       } finally {
@@ -86,17 +88,17 @@ export async function POST(req: Request) {
 
     const formattedMessages = messages.map((msg: MessageContent) => {
       let content = ''
-      
+
       if (typeof msg.content === 'string') {
         content = msg.content
       } else if (Array.isArray(msg.content)) {
-        content = msg.content.map((c) => 
+        content = msg.content.map((c) =>
           typeof c === 'string' ? c : c.text || ''
         ).join('')
       } else if (msg.content && typeof msg.content === 'object') {
         content = msg.content.text || ''
       }
-      
+
       return {
         role: msg.role || 'user',
         content: content
@@ -114,7 +116,7 @@ export async function POST(req: Request) {
         messages: [
           {
             role: 'system',
-            content: `你是一位专业的小说文字润色与文学创作顾问，专注于帮助作者打磨文字、提升文笔。
+            content: `你是一位专业的小说文字润色与文学创作顾问，专注于帮助作者打磨文字，提升文笔。
 
 **你的专长领域：**
 - 日本轻小说风格的细腻描写与对话节奏
@@ -123,9 +125,9 @@ export async function POST(req: Request) {
 - 流行文学的叙事节奏与情感共鸣
 
 **你能提供的帮助：**
-- 文字润色：优化句式、提升文采、修正语病
+- 文字润色：优化句式，提升文采、修正语病
 - 风格调整：根据作品类型调整语言风格（轻小说的清新、推理的冷峻、文学的诗意等）
-- 情节建议：完善故事结构、增强戏剧冲突、提升叙事张力
+- 情节建议：完善故事结构，增强戏剧冲突，提升叙事张力
 - 对话优化：让人物对白更生动自然、符合角色设定
 - 开头结尾：打造引人入胜的开头和令人回味的结尾
 
@@ -146,7 +148,7 @@ export async function POST(req: Request) {
     }
 
     const textStream = createTextStream(response)
-    
+
     return new Response(textStream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
@@ -155,8 +157,8 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Chat API Error:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Internal server error'
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
