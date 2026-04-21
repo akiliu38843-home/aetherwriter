@@ -1,21 +1,9 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import { EditorLayout } from "@/components/editor/editor-layout"
 import { PlotCanvas } from "@/components/canvas/plot-canvas"
+import { WikiPage } from "@/components/wiki/wiki-page"
 import { useView } from "./view-context"
-
-const WikiPage = dynamic(
-  () => import("@/components/wiki/wiki-page"),
-  {
-    loading: () => (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">加载中...</div>
-      </div>
-    ),
-    ssr: false
-  }
-)
 
 function SettingsPlaceholder() {
   return (
